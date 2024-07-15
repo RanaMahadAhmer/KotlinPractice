@@ -110,7 +110,7 @@ fun Greeting() {
             Box {
 
                 Button(onClick = { inputUnit = !inputUnit }) {
-                    Text("Convert")
+                    Text(inputUnitSelected)
                     Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Convert")
                 }
                 DropdownMenu(expanded = inputUnit, onDismissRequest = { inputUnit = false }) {
@@ -125,7 +125,7 @@ fun Greeting() {
             Spacer(modifier = Modifier.width(16.dp))
             Box {
                 Button(onClick = { outputUnit = !outputUnit }) {
-                    Text("Convert")
+                    Text(outputUnitSelected)
                     Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Convert")
                 }
 
@@ -135,9 +135,9 @@ fun Greeting() {
                             outputUnitSelected = unit
                             outputUnit = false
                             if (input.isNotEmpty()) {
+                                val num:Float = if (inputUnitSelected == outputUnitSelected) 1.0f else conversion["$inputUnitSelected-$outputUnitSelected"].toString().toFloat()
                                 output =
-                                    (input.toFloat() * conversion["$inputUnitSelected-$outputUnitSelected"].toString()
-                                        .toFloat()).toString()
+                                    (input.toFloat() * num).toString()
                             }
 
                         })
