@@ -134,9 +134,11 @@ fun Greeting() {
                         DropdownMenuItem(text = { Text(unit) }, onClick = {
                             outputUnitSelected = unit
                             outputUnit = false
-                            output =
-                                (input.toFloat() * conversion["$inputUnitSelected-$outputUnitSelected"].toString()
-                                    .toFloat()).toString()
+                            if (input.isNotEmpty()) {
+                                output =
+                                    (input.toFloat() * conversion["$inputUnitSelected-$outputUnitSelected"].toString()
+                                        .toFloat()).toString()
+                            }
 
                         })
                     }
