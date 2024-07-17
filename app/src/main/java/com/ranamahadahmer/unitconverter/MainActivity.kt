@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -25,10 +26,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -76,27 +76,25 @@ val units = listOf("Meter", "Foot", "Inches", "Centimetre")
 
 @Composable
 fun Greeting() {
-    var inputUnit by remember { mutableStateOf(false) }
-    var outputUnit by remember { mutableStateOf(false) }
-    var inputUnitSelected by remember { mutableStateOf(units.first()) }
-    var outputUnitSelected by remember { mutableStateOf(units.first()) }
-    var input by remember { mutableStateOf("") }
-    var output by remember { mutableStateOf("") }
+    val inputUnit = remember { mutableStateOf(false) }
+    val outputUnit = remember { mutableStateOf(false) }
+    val inputUnitSelected = remember { mutableStateOf(units.first()) }
+    val outputUnitSelected = remember { mutableStateOf(units.first()) }
+    val input = remember { mutableStateOf("") }
+    val output = remember { mutableStateOf("") }
 
 
     fun computeValue() {
-        if (input.isNotEmpty()) {
+        if (input.value.isNotEmpty()) {
             val num: Float =
-                if (inputUnitSelected == outputUnitSelected) 1.0f else conversion["$inputUnitSelected-$outputUnitSelected"].toString()
+                if (inputUnitSelected.value == outputUnitSelected.value) 1.0f else conversion["${inputUnitSelected.value}-${outputUnitSelected.value}"].toString()
                     .toFloat()
-            output =
-                (input.toFloat() * num).toString()
+            output.value =
+                (input.value.toFloat() * num).toString()
         } else {
-            output = ""
+            output.value = ""
         }
     }
-
-
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -110,9 +108,9 @@ fun Greeting() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
-            value = input,
+            value = input.value,
             onValueChange = {
-                input = it.replace(",", "").replace("(", "").replace(")", "").replace(",", "")
+                input.value = it.replace(",", "").replace("(", "").replace(")", "").replace(",", "")
                     .replace("+", "").replace("-", "").replace("N", "").replace("/", "")
                     .replace("#", "").replace(" ", "").replace(";", "").replace("*", "")
                 computeValue()
@@ -122,52 +120,52 @@ fun Greeting() {
             placeholder = { Text("Enter a value") })
         Spacer(modifier = Modifier.height(16.dp))
         Row {
-            Box {
-
-                Button(onClick = { inputUnit = !inputUnit }) {
-                    Text(inputUnitSelected)
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Convert")
-                }
-                DropdownMenu(
-                    expanded = inputUnit,
-                    onDismissRequest = { inputUnit = false }) {
-                    for (unit in units) {
-                        DropdownMenuItem(text = { Text(unit) }, onClick = {
-                            inputUnitSelected = unit
-                            inputUnit = false
-                            computeValue()
-                        })
-                    }
-                }
-            }
+            CreateButton(
+                menuState = inputUnit,
+                selectedUnit = inputUnitSelected,
+                func = ::computeValue
+            )
             Spacer(modifier = Modifier.width(16.dp))
-            Box {
-                Button(onClick = { outputUnit = !outputUnit }) {
-                    Text(outputUnitSelected)
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Convert")
-                }
-
-                DropdownMenu(expanded = outputUnit, onDismissRequest = { outputUnit = false }) {
-                    for (unit in units) {
-                        DropdownMenuItem(text = { Text(unit) }, onClick = {
-                            outputUnitSelected = unit
-                            outputUnit = false
-                            computeValue()
-                        })
-                    }
-                }
-            }
+            CreateButton(
+                menuState = outputUnit,
+                selectedUnit = outputUnitSelected,
+                func = ::computeValue
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "The result is: $output",
+            text = "The result is: ${output.value}",
             fontWeight = FontWeight(600)
-
         )
-
     }
 }
 
+@Composable
+fun CreateButton(
+    menuState: MutableState<Boolean>,
+    selectedUnit: MutableState<String>,
+    func: () -> Unit
+) {
+    Box {
+
+        Button(
+            onClick = { menuState.value = !menuState.value }) {
+            Text(selectedUnit.value)
+            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Convert")
+        }
+        DropdownMenu(
+            expanded = menuState.value,
+            onDismissRequest = { menuState.value = false }) {
+            for (unit in units) {
+                DropdownMenuItem(text = { Text(unit) }, onClick = {
+                    selectedUnit.value = unit
+                    menuState.value = false
+                    func()
+                })
+            }
+        }
+    }
+}
 
 @Preview(
     showBackground = true,
