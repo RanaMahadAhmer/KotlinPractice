@@ -1,6 +1,7 @@
 package com.ranamahadahmer.unitconverter
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ranamahadahmer.unitconverter.ui.theme.UnitConverterTheme
@@ -69,7 +71,7 @@ val conversion = mapOf(
     "Centimetre-Foot" to 0.03280,
     "Centimetre-Inches" to 0.3937008,
 )
-val units = listOf<String>("Meter", "Foot", "Inches", "Centimetre")
+val units = listOf("Meter", "Foot", "Inches", "Centimetre")
 
 
 @Composable
@@ -80,6 +82,19 @@ fun Greeting() {
     var outputUnitSelected by remember { mutableStateOf(units.first()) }
     var input by remember { mutableStateOf("") }
     var output by remember { mutableStateOf("") }
+
+
+    fun computeValue() {
+        if (input.isNotEmpty()) {
+            val num: Float =
+                if (inputUnitSelected == outputUnitSelected) 1.0f else conversion["$inputUnitSelected-$outputUnitSelected"].toString()
+                    .toFloat()
+            output =
+                (input.toFloat() * num).toString()
+        } else {
+            output = ""
+        }
+    }
 
 
     Column(
@@ -96,11 +111,11 @@ fun Greeting() {
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
             value = input,
-            onValueChange = { value ->
-                input = value.replace(",", "").replace("(", "").replace(")", "").replace(",", "")
+            onValueChange = {
+                input = it.replace(",", "").replace("(", "").replace(")", "").replace(",", "")
                     .replace("+", "").replace("-", "").replace("N", "").replace("/", "")
                     .replace("#", "").replace(" ", "").replace(";", "").replace("*", "")
-
+                computeValue()
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -113,11 +128,14 @@ fun Greeting() {
                     Text(inputUnitSelected)
                     Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Convert")
                 }
-                DropdownMenu(expanded = inputUnit, onDismissRequest = { inputUnit = false }) {
+                DropdownMenu(
+                    expanded = inputUnit,
+                    onDismissRequest = { inputUnit = false }) {
                     for (unit in units) {
                         DropdownMenuItem(text = { Text(unit) }, onClick = {
                             inputUnitSelected = unit
                             inputUnit = false
+                            computeValue()
                         })
                     }
                 }
@@ -134,12 +152,7 @@ fun Greeting() {
                         DropdownMenuItem(text = { Text(unit) }, onClick = {
                             outputUnitSelected = unit
                             outputUnit = false
-                            if (input.isNotEmpty()) {
-                                val num:Float = if (inputUnitSelected == outputUnitSelected) 1.0f else conversion["$inputUnitSelected-$outputUnitSelected"].toString().toFloat()
-                                output =
-                                    (input.toFloat() * num).toString()
-                            }
-
+                            computeValue()
                         })
                     }
                 }
@@ -155,7 +168,14 @@ fun Greeting() {
     }
 }
 
-@Preview(showBackground = true)
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    apiLevel = 35,
+    device = Devices.PIXEL_7_PRO,
+    uiMode = UI_MODE_NIGHT_YES
+)
 @Composable
 fun GreetingPreview() {
     UnitConverterTheme {
